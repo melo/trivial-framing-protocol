@@ -584,6 +584,11 @@ The recommended minimum algorith is round-robin: the implementation scans
 Future version could add a simple urgent flag or a full blown priority field.
 \end_layout
 
+\begin_layout Standard
+Channels 0x00 and 0x7f are exempt from this, and should be sent with a higher
+ priority.
+\end_layout
+
 \begin_layout Section
 TFP Frame processing
 \end_layout
