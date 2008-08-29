@@ -437,6 +437,69 @@ The size of the Frame Payload is the value of the Payload size Header field,
  and can be 0.
 \end_layout
 
+\begin_layout Section
+Frame ID management
+\end_layout
+
+\begin_layout Standard
+Inside a TFP Session, there is a Frame ID counter on each direction, an
+ Outgoing Frame Counter, and a Incoming Frame Counter.
+\end_layout
+
+\begin_layout Standard
+The Outgoing Frame Counter is incremented for each Data Frame sent, starting
+ from 0x0001.
+ If Frame ID is 0xffff, it wraps around to 0x0001.
+ Senders should hold on to Data Frames sent until they receive the acknowledge
+ of reception by their peer.
+\end_layout
+
+\begin_layout Standard
+Frame IDs are per TFP Session, and not per Channel.
+ This means that Frame 0x0001 could be used for Channel 0x00, followed by
+ Frame 0x0002 for Channel 0x12, and then Frame 0x0003 for Channel 0x00 again.
+\end_layout
+
+\begin_layout Standard
+For each Data Frame received, the receiver must check to see if the Frame
+ ID matches the current Incoming Frame Counter.
+ If it does, then it increments the Incoming Frame ID.
+\end_layout
+
+\begin_layout Standard
+If the incoming Data Frame ID does not match the Incoming Frame ID counter,
+ the connection has lost frames, and the receiver should terminate the TFP
+ Session.
+\end_layout
+
+\begin_layout Standard
+Each peer must send regular Frame Acks of last Frame ID received.
+ When to send the ack is left as an implementation detail, but given that
+ unacknowledge frames use memory on the sending side, the following limits
+ should be respected:
+\end_layout
+
+\begin_layout Itemize
+no more than 8 Frames pending;
+\end_layout
+
+\begin_layout Itemize
+no more than 10 seconds with Frames pending.
+\end_layout
+
+\begin_layout Standard
+This limits are defaults.
+ Future protocol extensions might allow them to be negotiated per Session.
+\end_layout
+
+\begin_layout Standard
+A Frame Ack with Frame ID N acks all Frame IDs lower or equal then N, including
+ the IDs wrapped around.
+ For example, if a peer has pending Frame IDs 0xfffe, 0xffff, 0x0001 and
+ 0x0002, a Frame Ack with Frame ID 0x0001 MUST mark Frames 0xfffe, 0xffff
+ and 0x0001 as received, and leave Frame 0x0002 as still pending.
+\end_layout
+
 \begin_layout Chapter
 Protocol Zero
 \end_layout
