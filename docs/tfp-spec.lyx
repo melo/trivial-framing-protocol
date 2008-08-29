@@ -438,6 +438,41 @@ The size of the Frame Payload is the value of the Payload size Header field,
 \end_layout
 
 \begin_layout Section
+Channels
+\end_layout
+
+\begin_layout Standard
+Channels can be viewed by higher-level protocols as message-based or stream-base
+d pipes.
+\end_layout
+
+\begin_layout Standard
+TFP is based on frames and the high-level protocol can use those to their
+ advantage, but they can also use the payloads without framing, as a pure
+ byte sequence, for example, to implement file transfer.
+\end_layout
+
+\begin_layout Standard
+TFP will honor this 
+\begin_inset Quotes eld
+\end_inset
+
+rules
+\begin_inset Quotes erd
+\end_inset
+
+ (TODO: need better name: facts? specifctaions? promisses?):
+\end_layout
+
+\begin_layout Itemize
+Frames will arrive in the order sent;
+\end_layout
+
+\begin_layout Itemize
+No frames will be silently dropped.
+\end_layout
+
+\begin_layout Section
 Frame ID management
 \end_layout
 
