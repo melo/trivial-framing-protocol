@@ -217,6 +217,7 @@ TFP Sessions have 1 or more channels active at any point in time.
 
 \begin_layout Standard
 Channel 0x00 is reserved for Session Management, using PZ.
+ Channel 0x7f is reserved for Frame acks.
 \end_layout
 
 \begin_layout Standard
@@ -397,8 +398,9 @@ The payload size does not include the 6 bytes of the header, so 0 is a valid
 \end_layout
 
 \begin_layout Standard
-The Channel is a value between 0x00 and 0x127 and Channel 0x00 is reserved
- for TFP Session management.
+The Channel is a value between 0x00 and 0x7f.
+ Channel 0x00 is reserved for TFP Session management, and Channel 0x7f is
+ used for Frame acks.
 \end_layout
 
 \begin_layout Standard
@@ -406,6 +408,19 @@ The Frame ID is used to implement Frame acknowledges for reliable delivery
  semantics.
  Valid Frame IDs range between 0x0001 and 0xffff.
  Frame ID 0x0000 is reserved for future use.
+\end_layout
+
+\begin_layout Standard
+Frames can be divided in two types:
+\end_layout
+
+\begin_layout Itemize
+Data Frames: a Frame used to transport another higher-level protocol data;
+\end_layout
+
+\begin_layout Itemize
+Ack Frames: a Frame used to acknowledge the reception of Frames.
+ The Channel is 0x7f and the Frame ID is the last Frame ID received sucessfuly.
 \end_layout
 
 \begin_layout Subsection
