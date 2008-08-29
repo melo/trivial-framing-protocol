@@ -591,6 +591,14 @@ The second rule requires that a peer must alternate at least between two
  IDs.
 \end_layout
 
+\begin_layout Standard
+The Conversation ID 0 is reserved for Notifications.
+\end_layout
+
+\begin_layout Standard
+Notifications are Phrases that do not require a response.
+\end_layout
+
 \begin_layout Section
 Phrase Structure
 \end_layout
