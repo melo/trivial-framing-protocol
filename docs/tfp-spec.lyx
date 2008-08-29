@@ -639,7 +639,7 @@ Each Phrase is encoded into a single frame as follows.
 \end_layout
 
 \begin_layout Enumerate
-First byte is the Conversation identifier;
+First byte is the Conversation identifier, range 0x00 to 0xff;
 \end_layout
 
 \begin_layout Enumerate
