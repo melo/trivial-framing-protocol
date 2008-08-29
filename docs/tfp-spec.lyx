@@ -543,8 +543,193 @@ Protocol Zero
 The TFP session is managed using Protocol Zero (PZ).
 \end_layout
 
+\begin_layout Section
+PZ Structure
+\end_layout
+
 \begin_layout Standard
-TBW, need notes from chat with Fabio.
+A PZ session is sequence of PZ conversations.
+ Each Conversation has a goal: establish a TLS secure channel, negotiate
+ session parameters, open or close channels or resume sessions dropped TFP
+ Sessions.
+\end_layout
+
+\begin_layout Standard
+A Conversation is a sequence of PZ Phrases.
+ A Conversation can be made up of 2 or more phrases.
+\end_layout
+
+\begin_layout Standard
+Any one of the peers can start a Conversation.
+\end_layout
+
+\begin_layout Standard
+Each Conversation is identified by a Conversation ID.
+ This identifier groups phrases into Conversations.
+ Each peer must use a different Conversation ID for each Conversation.
+ For simplicity, Clients only use even IDs, and Servers only use odd IDs,
+ This allows the possibility of two Conversation starting at the same time
+ on opposing peers without ID clashes.
+\end_layout
+
+\begin_layout Standard
+Each peer manages his own IDs.
+ Peers can use any algorithm to generate the IDs as long as they respect
+ the following two restrictions:
+\end_layout
+
+\begin_layout Enumerate
+Two simultaneous conversations cannot use the same ID;
+\end_layout
+
+\begin_layout Enumerate
+Two sequencial conversations cannot use the same ID.
+\end_layout
+
+\begin_layout Standard
+The second rule requires that a peer must alternate at least between two
+ IDs.
+\end_layout
+
+\begin_layout Section
+Phrase Structure
+\end_layout
+
+\begin_layout Standard
+Each phrase is sent in a single TFP Frame, over Channel 0.
+\end_layout
+
+\begin_layout Standard
+Each Phrase has the following elements:
+\end_layout
+
+\begin_layout Itemize
+a conversation identifier;
+\end_layout
+
+\begin_layout Itemize
+a verb;
+\end_layout
+
+\begin_layout Itemize
+a set of key,value attributes.
+\end_layout
+
+\begin_layout Standard
+The Verb identifies the type of Phrase.
+ Each Attribute uses a fixed size Key, and a variable length sequence of
+ bytes for the Value.
+ The Value cannot contain the 0x00 byte.
+\end_layout
+
+\begin_layout Subsection
+Wire format
+\end_layout
+
+\begin_layout Standard
+Each Phrase is encoded into a single frame as follows.
+\end_layout
+
+\begin_layout Enumerate
+First byte is the Conversation identifier;
+\end_layout
+
+\begin_layout Enumerate
+Second byte is the Verb identifier, in the range 0x00 to 0x7f;
+\end_layout
+
+\begin_layout Enumerate
+Third byte is the number of attributes this phrase contains, in the range
+ 0x00 to 0x7f;
+\end_layout
+
+\begin_layout Enumerate
+Foreach attribute, write the single byte Attribute Key (range 0x00 to 0x7f),
+ followed by a 0x00 terminated byte sequence of the Value.
+\end_layout
+
+\begin_layout Section
+Phrases Specification
+\end_layout
+
+\begin_layout Standard
+The following phrases are present in PZ.
+\end_layout
+
+\begin_layout Subsection
+Start TLS
+\end_layout
+
+\begin_layout Subsection
+Started TLS
+\end_layout
+
+\begin_layout Subsection
+Start Session
+\end_layout
+
+\begin_layout Subsection
+Stared Session
+\end_layout
+
+\begin_layout Subsection
+Open Channel
+\end_layout
+
+\begin_layout Subsection
+Channel Opened
+\end_layout
+
+\begin_layout Subsection
+Close Channel
+\end_layout
+
+\begin_layout Subsection
+Channel Closed
+\end_layout
+
+\begin_layout Subsection
+Resume Session
+\end_layout
+
+\begin_layout Subsection
+Session Resumed
+\end_layout
+
+\begin_layout Subsection
+Terminate Session
+\end_layout
+
+\begin_layout Subsection
+Session Terminated
+\end_layout
+
+\begin_layout Section
+Conversation Flows
+\end_layout
+
+\begin_layout Subsection
+TLS Security
+\end_layout
+
+\begin_layout Subsection
+Session Configuration
+\end_layout
+
+\begin_layout Subsection
+Create Channel
+\end_layout
+
+\begin_layout Subsection
+Destroy Channel
+\end_layout
+
+\begin_layout Subsection
+Session Resume
+\end_layout
+
+\begin_layout Subsection
+Session Termination
 \end_layout
 
 \begin_layout Standard
