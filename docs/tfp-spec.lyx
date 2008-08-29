@@ -1,0 +1,502 @@
+#LyX 1.5.6 created this file. For more info see http://www.lyx.org/
+\lyxformat 276
+\begin_document
+\begin_header
+\textclass book
+\language english
+\inputencoding auto
+\font_roman newcent
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\branch Implementation
+\selected 0
+\color #6bfa80
+\end_branch
+\secnumdepth 2
+\tocdepth 2
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+TFP: Trivial Framming Protocol
+\end_layout
+
+\begin_layout Author
+Fabio Forno - Pedro Melo
+\end_layout
+
+\begin_layout Chapter
+Introduction
+\end_layout
+
+\begin_layout Standard
+The Trivial Framming Protocol (TFP) provides a very simple generic framming
+ scheme with the following characteristics:
+\end_layout
+
+\begin_layout Itemize
+Multi stream support: an application can use multiple independent bidirectional
+ streams;
+\end_layout
+
+\begin_layout Itemize
+TLS support: all comunication across all streams can be wrapped in a TLS
+ tunnel;
+\end_layout
+
+\begin_layout Itemize
+Zero-copy/Zero-parsing protocol: the protocol to manage the channels does
+ not require a parser - the wire format can be used directly from the input
+ buffer without further copying into structures.
+\end_layout
+
+\begin_layout Itemize
+Session resume capabilities: you can resume all or some of the open channels
+ in the case of lost connection;
+\end_layout
+
+\begin_layout Itemize
+Reliable delivery: all frames are acknowledged.
+\end_layout
+
+\begin_layout Standard
+The protocol was desinged to be used over TCP.
+\end_layout
+
+\begin_layout Section
+Protocol Zero
+\end_layout
+
+\begin_layout Standard
+Included with the TFP specification is Protocol Zero (PZ).
+\end_layout
+
+\begin_layout Standard
+TFP uses PZ to negotiate the session parameters, TLS parameters, manage
+ channels (opening, configuring, and closing), and session resume.
+\end_layout
+
+\begin_layout Standard
+PZ is an in-band protocol, running on a dedicated channels
+\end_layout
+
+\begin_layout Section
+Glossary
+\end_layout
+
+\begin_layout Standard
+The following terms will be uses throughout this specification.
+\end_layout
+
+\begin_layout Description
+TFP Trivial Framming Protocol, the name of this specification;
+\end_layout
+
+\begin_layout Description
+PZ Protocol Zero, used to manage a TFP session, uses a reserved channel;
+\end_layout
+
+\begin_layout Description
+Session Context established by a single TCP connection, last as long as
+ the TCP connection is open;
+\end_layout
+
+\begin_layout Description
+Frame Byte sequence with an header and a payload.
+ Basic unit of processing in terms of the TFP;
+\end_layout
+
+\begin_layout Description
+Header Byte sequence at the start of the Frame with significant meaning
+ to the TFP;
+\end_layout
+
+\begin_layout Description
+Payload Bytes sequence, possibly empty, at the end of the Frame, semanticaly
+ ignored by TFP;
+\end_layout
+
+\begin_layout Description
+Channel A logical stream inside the Session TCP connection, identified by
+ a N0 number;
+\end_layout
+
+\begin_layout Chapter
+TFP
+\end_layout
+
+\begin_layout Standard
+The two essencial concepts of TFP are Sessions and Frames.
+\end_layout
+
+\begin_layout Section
+TFP Sessions
+\end_layout
+
+\begin_layout Standard
+A TFP session is the context where all the data transfer takes place.
+ TFP works between two end-points.
+ The initiator is called the Client, and the receiver is called the Server.
+\end_layout
+
+\begin_layout Standard
+A TFP session is setup in three fases:
+\end_layout
+
+\begin_layout Itemize
+Connection;
+\end_layout
+
+\begin_layout Itemize
+Protocol hanshake;
+\end_layout
+
+\begin_layout Itemize
+Session negotiation.
+\end_layout
+
+\begin_layout Standard
+TFP sessions run over a TCP connection and last as long as the underlying
+ TCP connection lasts.
+\end_layout
+
+\begin_layout Subsection
+Connection
+\end_layout
+
+\begin_layout Standard
+The TCP connection is started by the initiator (Client) and accepted by
+ the (Server).
+\end_layout
+
+\begin_layout Standard
+There is no assigned port for TFP because TFP is not a real protocol by-itself.
+ Protocols using TFP should assigned a port know as PROTO-Over-TFP.
+\end_layout
+
+\begin_layout Standard
+In some situations it should be possible to auto-detect the original protocol
+ and TFP on the same port.
+\end_layout
+
+\begin_layout Standard
+In case of a sucessfuly TCP connection, the TFP Session enters the Protocol
+ handshake phase.
+\end_layout
+
+\begin_layout Standard
+TFP Sessions have 1 or more channels active at any point in time.
+ Channels are identified by number from 0x00 to 0x7f.
+\end_layout
+
+\begin_layout Standard
+Channel 0x00 is reserved for Session Management, using PZ.
+\end_layout
+
+\begin_layout Standard
+TFP Frames are used to exchange information on each channel.
+\end_layout
+
+\begin_layout Subsection
+Protocol Handshake
+\end_layout
+
+\begin_layout Standard
+The Client sends a 5 byte version sequence.
+ The version string is divided in three parts:
+\end_layout
+
+\begin_layout Itemize
+the protocol identifier: the byte sequence 0x54 0x46 0x50, in ASCII 
+\noun on
+TFP
+\noun default
+;
+\end_layout
+
+\begin_layout Itemize
+the protocol major version: a single byte;
+\end_layout
+
+\begin_layout Itemize
+the protocol minor version: a single byte.
+\end_layout
+
+\begin_layout Standard
+The major version is currently 1, and the minor version is 0.
+ Implementations of the same major version but with diferent minor version
+ should be able to work togheter with minor, if any, loss of functionality.
+\end_layout
+
+\begin_layout Standard
+If the Server is willing to use the proposed version, he sends back an acceptanc
+e 5 byte sequence:
+\end_layout
+
+\begin_layout Itemize
+the acceptance string: the byte sequence 0x47 0x47 0x4b, in ASCII 
+\noun on
+OOK
+\noun default
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Standard
+Mandatory Terry Pratchett reference
+\end_layout
+
+\end_inset
+
+;
+\end_layout
+
+\begin_layout Itemize
+the protocol major version: a single byte, matching the Clients major version;
+\end_layout
+
+\begin_layout Itemize
+the protocol minor version: a single byte, possiby diferent from the Clients.
+\end_layout
+
+\begin_layout Standard
+After the acceptance is sent, the Client can still close the connection
+ if for some reason he requires a stronger match with the minor version.
+ Such behaviour is allowed, but not recommended.
+ If the Client is able to use the version presented by the Server, the TFP
+ Session enters the Session Negotiation phase.
+\end_layout
+
+\begin_layout Standard
+If the Server is not willing to use the proposal protocol, it sends back
+ an rejection 5 byte sequence:
+\end_layout
+
+\begin_layout Itemize
+the rejection string: the byte sequence 0x52 0x45 0x4a, in ASCII REJ;
+\end_layout
+
+\begin_layout Itemize
+the minimum accepted major version: a single byte;
+\end_layout
+
+\begin_layout Itemize
+the minimum accepted minor version: a single byte.
+\end_layout
+
+\begin_layout Standard
+Immediatly after sending the rejection sequence, the Server closes the TCP
+ connection.
+\end_layout
+
+\begin_layout Subsection
+Session Negotiation
+\end_layout
+
+\begin_layout Standard
+The Session Negotiation phase takes place over channel 0, using PZ.
+\end_layout
+
+\begin_layout Section
+TFP Frames
+\end_layout
+
+\begin_layout Standard
+A TFP Frame is the basic unit of data transfer in TFP.
+\end_layout
+
+\begin_layout Standard
+It is devided into two parts:
+\end_layout
+
+\begin_layout Itemize
+an initial header: a fixed lenght byte sequence of fields with semantic
+ meaning to the TFP;
+\end_layout
+
+\begin_layout Itemize
+an optional payload: a variable length opaque byte sequence, with no semantic
+ meaning to TFP.
+\end_layout
+
+\begin_layout Subsection
+Frame Header
+\end_layout
+
+\begin_layout Standard
+The TFP Frame Header contains the following fields:
+\end_layout
+
+\begin_layout Itemize
+Payload size: a 23-bit field, for a maximum Frame size of 8Mbytes.
+ Payload sizes are written in three bytes where the MSB has only 7 bits
+ used;
+\end_layout
+
+\begin_layout Itemize
+Channel: a 7-bit field, channels range from 0x00 to 0x7f;
+\end_layout
+
+\begin_layout Itemize
+Frame ID: a 16-bit field, for a range of IDs from 0x0000 to 0xffff.
+\end_layout
+
+\begin_layout Standard
+The wire representation of the fields is as follows, in network order:
+\end_layout
+
+\begin_layout Itemize
+first byte includes bits 16 to 22 of the Payload size in bits 0 to 6.
+ Bit 7 is reserved and MUST be 0.
+\end_layout
+
+\begin_layout Itemize
+second and third bytes includes the remaining 16 bits of the Payload size,
+ 15 to 8 and 7 to 0, respectively;
+\end_layout
+
+\begin_layout Itemize
+fourth byte includes the 7 bits of the Channel in bits 0 to 6.
+ Bit 7 is reserved and MUST be 0.
+\end_layout
+
+\begin_layout Itemize
+fitfth and sixth bytes are used by the 16 bits of the Frame ID field, 15
+ to 8 and 7 to 0, respectively.
+\end_layout
+
+\begin_layout Standard
+The payload size does not include the 6 bytes of the header, so 0 is a valid
+ Payload size value.
+\end_layout
+
+\begin_layout Standard
+The Channel is a value between 0x00 and 0x127 and Channel 0x00 is reserved
+ for TFP Session management.
+\end_layout
+
+\begin_layout Standard
+The Frame ID is used to implement Frame acknowledges for reliable delivery
+ semantics.
+ Valid Frame IDs range between 0x0001 and 0xffff.
+ Frame ID 0x0000 is reserved for future use.
+\end_layout
+
+\begin_layout Subsection
+Frame payload
+\end_layout
+
+\begin_layout Standard
+The Frame Payload is an optional sequence of opaque bytes, without meaning
+ to the TFP.
+\end_layout
+
+\begin_layout Standard
+The size of the Frame Payload is the value of the Payload size Header field,
+ and can be 0.
+\end_layout
+
+\begin_layout Chapter
+Protocol Zero
+\end_layout
+
+\begin_layout Standard
+The TFP session is managed using Protocol Zero (PZ).
+\end_layout
+
+\begin_layout Standard
+TBW, need notes from chat with Fabio.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Branch Implementation
+status collapsed
+
+\begin_layout Chapter
+Implementation Notes
+\end_layout
+
+\begin_layout Standard
+Some aspects that can influence the protocol are kept out of the specification.
+ This allows implementations to experiment with different solutions.
+\end_layout
+
+\begin_layout Standard
+Future major version of this specification migth provide guidelines on some
+ or all of those aspects.
+\end_layout
+
+\begin_layout Section
+Channel fairness
+\end_layout
+
+\begin_layout Standard
+A high-activity channel can overrun a low-activity channel unless a proper
+ frame scheduling algorithm is employed.
+\end_layout
+
+\begin_layout Standard
+The recommended minimum algorith is round-robin: the implementation scans
+ all the channels for frames to send, one by one, and sends one frame from
+ each.
+\end_layout
+
+\begin_layout Standard
+Future version could add a simple urgent flag or a full blown priority field.
+\end_layout
+
+\begin_layout Section
+TFP Frame processing
+\end_layout
+
+\begin_layout Standard
+Implementations, specially in situations where the frame is just passin
+ through, are encouraged to process the Frame in two steps:
+\end_layout
+
+\begin_layout Enumerate
+Read the header and decide where the frame should go;
+\end_layout
+
+\begin_layout Enumerate
+Splice the receiver and sender sockets for the payload.
+\end_layout
+
+\begin_layout Standard
+This should take advantage of modern kernels capabilities to provide zero
+ copy of network data, using DMA from network interface to network interface.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
